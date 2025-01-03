@@ -20,7 +20,7 @@ namespace Dipl_pasw_keys
             InitializeComponent();
         }
 
-        private string sha256KoduOlustur(string s)
+        public string sha256KoduOlustur(string s)
         {
             var sha256 = SHA256.Create();
             byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(s)); // ComputeHash bir byte dizisi döner
@@ -35,7 +35,9 @@ namespace Dipl_pasw_keys
 
         private void btnCikis_Click(object sender, EventArgs e)
         {
-            Close();
+            DialogResult result = MessageBox.Show("kullanıcı giriş panelinden çıkılsın mı", "Dipl_pasw_keys", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+                Application.Exit();
         }
 
         private void btnGiris_Click(object sender, EventArgs e)
@@ -82,7 +84,7 @@ namespace Dipl_pasw_keys
             catch (Exception ex)
             {
                 // Hata durumunda mesaj gösteriliyor
-                MessageBox.Show("VT bağlantısında sorun oluştu, hata kodu: H002\n" + ex.Message);
+                MessageBox.Show("VT bağlantısında hata oluştu, hata kodu: H002\n" + ex.Message);
             }
             finally
             {
@@ -96,52 +98,10 @@ namespace Dipl_pasw_keys
 
         private void btnKayitOl_Click(object sender, EventArgs e)
         {
-            // Kullanıcı adı kontrolü için SQL sorgusu
-            string sql = "SELECT kul_kod FROM kullanicilar WHERE kul_kod=@P1";
+           
+            KayitOl kayitFormu = new KayitOl(); 
+            kayitFormu.ShowDialog();
 
-            try
-            {
-                conn.Open();
-
-                // Kullanıcı adı kontrolü
-                MySqlCommand cmd = new MySqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@P1", txt_kullanici_adi.Text);
-                MySqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    // Kullanıcı adı zaten mevcut
-                    MessageBox.Show(txt_kullanici_adi.Text + " isminde bir kullanıcı zaten mevcut.");
-                }
-                else
-                {
-                    // Yeni kullanıcı eklenebilir
-                    reader.Close(); // DataReader kapatılmalı
-
-                    // Kullanıcı ekleme sorgusu
-                    string insertSql = "INSERT INTO kullanicilar (kul_kod, kul_pw, kul_ad) VALUES (@P1, @P2, @P3)";
-                    MySqlCommand insertCmd = new MySqlCommand(insertSql, conn);
-                    insertCmd.Parameters.AddWithValue("@P1", txt_kullanici_adi.Text); // Kullanıcı kodu
-                    insertCmd.Parameters.AddWithValue("@P2", sha256KoduOlustur(txt_şifre.Text)); // Şifre
-                    insertCmd.Parameters.AddWithValue("@P3", txtKullaniciAdi.Text); // Kullanıcı adı (yeni eklediğiniz TextBox'tan)
-
-                    insertCmd.ExecuteNonQuery();
-
-                    MessageBox.Show("Yeni kullanıcı başarıyla eklendi!");
-                }
-
-                reader.Close();
-            }
-            catch (Exception ex)
-            {
-                // Hata mesajı
-                MessageBox.Show("VT bağlantısında sorun oluştu, hata kodu: H001\n" + ex.Message);
-            }
-            finally
-            {
-                if (conn != null)
-                    conn.Close();
-            }
         }
 
         private void lblKullaniciAdi_Click(object sender, EventArgs e)
